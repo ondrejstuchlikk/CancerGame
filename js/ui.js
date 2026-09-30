@@ -79,7 +79,7 @@
       const el = hallmarkEls[h.id];
       if (h.special) {
         el.bar.style.width = pct(sim.instabilityScore());
-        el.mult.textContent = pct(sim.mutationProb(), 2) + ' / tick';
+        el.mult.textContent = pct(sim.mutationProb(), 2) + ' / step';
       } else {
         el.bar.style.width = pct(sim.hallmarkProgress(h.id));
         el.mult.textContent = '×' + sim.hallmarkMultiplier(h.id).toFixed(2);
@@ -187,7 +187,7 @@
 
     const s = sim.stats;
     const stats = [
-      ['Lasted', `${sim.tick} ticks`],
+      ['Time survived', sim.tick],
       ['Final tumor cells', sim.tumor.length.toLocaleString()],
       ['Peak tumor cells', s.peak.toLocaleString()],
       ['Cells born', s.born.toLocaleString()],

@@ -93,31 +93,36 @@
     orbit.radius = Math.max(sim.X, sim.Y, sim.Z) * 1.7;
 
     const box = new THREE.BoxGeometry(1, 1, 1);
-    const mk = (material, count) => {
-      const m = new THREE.InstancedMesh(box, material, count);
+    const mk = (geometry, material, count) => {
+      const m = new THREE.InstancedMesh(geometry, material, count);
       m.frustumCulled = false;
       for (let i = 0; i < count; i++) m.setColorAt(i, NORMAL_LOW); // allocate the colour buffer up front
       group.add(m);
       return m;
     };
 
-    meshNormal = mk(new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.3, depthWrite: false }), sim.N);
-    meshTumor = mk(new THREE.MeshLambertMaterial(), sim.N);
+    meshNormal = mk(new THREE.IcosahedronGeometry(0.5, 0),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.3, depthWrite: false }), sim.N);
+    // Tumor cells are smooth, slightly overlapping spheres so the mass reads as soft tissue.
+    meshTumor = mk(new THREE.IcosahedronGeometry(0.5, 2),
+      new THREE.MeshPhongMaterial({ shininess: 35, specular: 0x333333 }), sim.N);
 
-    const meshVessel = new THREE.InstancedMesh(
-      box, new THREE.MeshLambertMaterial({ color: 0xe5383b, emissive: 0x5a0f12 }), sim.vesselCells.length,
-    );
-    meshVessel.frustumCulled = false;
-    sim.vesselCells.forEach((c, k) => {
-      const [x, y, z] = sim.coords(c);
-      dummy.position.set(x, y, z); dummy.scale.setScalar(1); dummy.updateMatrix(); // full size so vessels read as continuous tubes
-      meshVessel.setMatrixAt(k, dummy.matrix);
+    // Vessels are drawn as smooth tubes through the vessel cells.
+    const vesselMat = new THREE.MeshPhongMaterial({ color: 0xe5383b, emissive: 0x5a0f12, shininess: 60 });
+    sim.vesselPaths.forEach((path) => {
+      if (path.length < 2) return;
+      const curve = new THREE.CatmullRomCurve3(path.map((p) => new THREE.Vector3(p[0], p[1], p[2])), false, 'centripetal');
+      group.add(new THREE.Mesh(new THREE.TubeGeometry(curve, path.length * 4, 0.55, 10, false), vesselMat));
+      [path[0], path[path.length - 1]].forEach((p) => {
+        const cap = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 8), vesselMat);
+        cap.position.set(p[0], p[1], p[2]);
+        group.add(cap);
+      });
     });
-    group.add(meshVessel);
 
     // pulsing wireframe so the single starting cell is easy to find
     seedMarker = new THREE.LineSegments(
-      new THREE.EdgesGeometry(box), new THREE.LineBasicMaterial({ color: 0xffffff }),
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(1.8, 1.8, 1.8)), new THREE.LineBasicMaterial({ color: 0xffffff }),
     );
     const [sx, sy, sz] = sim.coords(sim.seed);
     seedMarker.position.set(sx, sy, sz);
@@ -133,20 +138,35 @@
     update(sim);
   }
 
+  // cheap deterministic per-cell noise in [0,1), so a cell keeps its shape between ticks
+  const noise = (i, k) => { const v = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return v - Math.floor(v); };
+
   function update(sim) {
+    const { X, Y, Z, state } = sim;
+    // A tumor cell completely surrounded by other tumor cells can't be seen, so skip it.
+    const buried = (x, y, z) => {
+      if (x === 0 || y === 0 || z === 0 || x === X - 1 || y === Y - 1 || z === Z - 1) return false;
+      for (let dz = -1; dz <= 1; dz++) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (state[(x + dx) + X * ((y + dy) + Y * (z + dz))] === NORMAL) return false;
+      }
+      return true;
+    };
     let nNormal = 0, nTumor = 0;
     for (let i = 0; i < sim.N; i++) {
-      const s = sim.state[i];
+      const s = state[i];
       if (s !== NORMAL && s !== TUMOR) continue;
       const [x, y, z] = sim.coords(i);
-      dummy.position.set(x, y, z);
       if (s === TUMOR) {
-        dummy.scale.setScalar(0.9); dummy.updateMatrix();
+        if (buried(x, y, z)) continue;
+        // jittered position and size break up the grid
+        dummy.position.set(x + (noise(i, 1) - 0.5) * 0.45, y + (noise(i, 2) - 0.5) * 0.45, z + (noise(i, 3) - 0.5) * 0.45);
+        dummy.scale.setScalar(1.3 + noise(i, 4) * 0.4); dummy.updateMatrix();
         meshTumor.setMatrixAt(nTumor, dummy.matrix);
-        meshTumor.setColorAt(nTumor, tumorColor(sim.nutrient[i]));
+        meshTumor.setColorAt(nTumor, tumorColor(sim.nutrient[i]).multiplyScalar(0.88 + noise(i, 5) * 0.12));
         nTumor++;
       } else {
-        dummy.scale.setScalar(0.12); dummy.updateMatrix();
+        dummy.position.set(x, y, z);
+        dummy.scale.setScalar(0.14); dummy.updateMatrix();
         meshNormal.setMatrixAt(nNormal, dummy.matrix);
         const t = (sim.nutrient[i] - 0.1) / 0.9;
         meshNormal.setColorAt(nNormal, tmpColor.copy(NORMAL_LOW).lerp(NORMAL_HIGH, t));

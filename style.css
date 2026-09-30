@@ -58,6 +58,7 @@ main { flex: 1; display: flex; min-height: 0; }
 }
 .legend-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
 .swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.swatch { border-radius: 50%; }
 .swatch.vessel { background: #e5383b; }
 .swatch.normal { background: #9fb4c8; width: 6px; height: 6px; margin: 3px; }
 .ramp { height: 10px; width: 170px; border-radius: 3px; background: linear-gradient(90deg, #3547e8, #d63ac0, #ffc53d); }

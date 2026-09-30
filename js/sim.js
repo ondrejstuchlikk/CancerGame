@@ -13,7 +13,7 @@
     baseRange: 4,               // vessel supply range in grid cells
     nutrientMin: 0.1,
     mutationBase: 0.0005,       // per-gene per-tick random mutation chance at zero instability
-    mutationMax: 0.15,          // ...and at maximum instability
+    mutationMax: 0.02,          // ...and at maximum instability
     seedMaxVesselDist: 1.5,     // the starting cell is placed within this distance of a vessel (0 = anywhere)
     thriveFraction: 0.7,        // "Thriving" when tumor fills this share of the non-vessel grid
     hypoxicBelow: 0.35,         // nutrient below this is reported as hypoxic in the HUD
@@ -36,12 +36,13 @@
     const vesselDist = new Float32Array(N);
     const nutrient = new Float32Array(N);
     const vesselCells = [];
+    const vesselPaths = [];       // centre-lines, for drawing vessels as tubes
 
     const levels = {};
     HALLMARKS.forEach((h) => h.genes.forEach((g) => { levels[g.id] = 0; }));
 
     const sim = {
-      X, Y, Z, N, state, nutrient, vesselCells, levels, coords,
+      X, Y, Z, N, state, nutrient, vesselCells, vesselPaths, levels, coords,
       tissue, origin,
       tumor: [],
       seed: -1,
@@ -83,10 +84,13 @@
     function buildVessels() {
       const frac = (n, lo, hi) => randInt(Math.floor(n * lo), Math.floor(n * hi));
       const trunk = walk([0, frac(Y, 0.35, 0.65), frac(Z, 0.4, 0.6)], 0, 1, X, 0.2);
+      vesselPaths.push(trunk);
       const branch = (from, axis, dir, length) => {
         const start = from.slice();
         start[axis] += dir;
-        return walk(start, axis, dir, length, 0.25);
+        const path = walk(start, axis, dir, length, 0.25);
+        vesselPaths.push([from].concat(path));
+        return path;
       };
       const a = branch(trunk[frac(X, 0.2, 0.35)], 2, 1, Z);
       const b = branch(trunk[frac(X, 0.65, 0.8)], 2, -1, Z);
