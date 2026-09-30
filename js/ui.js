@@ -73,13 +73,13 @@
     $('sDeath').textContent = pct(sim.deathProb(), 1);
     $('sRange').textContent = sim.vesselRange().toFixed(1) + ' cells';
     $('sHypoxic').textContent = pct(sim.hypoxicFraction());
-    $('sMut').textContent = pct(sim.mutationProb(), 1);
+    $('sMut').textContent = pct(sim.mutationProb(), 2);
 
     HALLMARKS.forEach((h) => {
       const el = hallmarkEls[h.id];
       if (h.special) {
         el.bar.style.width = pct(sim.instabilityScore());
-        el.mult.textContent = pct(sim.mutationProb(), 1) + ' / tick';
+        el.mult.textContent = pct(sim.mutationProb(), 2) + ' / tick';
       } else {
         el.bar.style.width = pct(sim.hallmarkProgress(h.id));
         el.mult.textContent = '×' + sim.hallmarkMultiplier(h.id).toFixed(2);

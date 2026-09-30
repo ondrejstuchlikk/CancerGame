@@ -12,6 +12,8 @@
     baseDeath: 0.0175,           // per-tick death probability before apoptosis resistance
     baseRange: 4,               // vessel supply range in grid cells
     nutrientMin: 0.1,
+    mutationBase: 0.0005,       // per-gene per-tick random mutation chance at zero instability
+    mutationMax: 0.15,          // ...and at maximum instability
     seedMaxVesselDist: 1.5,     // the starting cell is placed within this distance of a vessel (0 = anywhere)
     thriveFraction: 0.7,        // "Thriving" when tumor fills this share of the non-vessel grid
     hypoxicBelow: 0.35,         // nutrient below this is reported as hypoxic in the HUD
@@ -122,7 +124,7 @@
       const genes = HALLMARKS.find((h) => h.id === 'instability').genes;
       return genes.reduce((s, g) => s + levels[g.id], 0) / genes.length / 3;
     };
-    sim.mutationProb = () => 0.01 + sim.instabilityScore() * 0.14;
+    sim.mutationProb = () => CFG.mutationBase + sim.instabilityScore() * (CFG.mutationMax - CFG.mutationBase);
     sim.vesselRange = () => CFG.baseRange * (tissue.rangeMul || 1) * sim.hallmarkMultiplier('angio');
     sim.deathProb = () => CFG.baseDeath * (tissue.deathMul || 1) * (origin.deathMul || 1)
       / sim.hallmarkMultiplier('apoptosis');
