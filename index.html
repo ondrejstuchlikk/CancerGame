@@ -13,7 +13,7 @@
       <div id="phase"></div>
       <div class="controls">
         <button id="btnPlay" class="primary">Begin growth</button>
-        <button id="btnStep" title="Advance a single tick">Next tick</button>
+        <button id="btnStep" title="Advance the simulation by a single time step">Next tick</button>
         <label>Speed
           <select id="speed">
             <option value="1">1×</option>
@@ -36,6 +36,7 @@
           <div class="ramp"></div>
           <div class="ramp-labels"><span>hypoxic</span><span>well supplied</span></div>
           <div class="hint">Drag to rotate · scroll to zoom</div>
+          <div class="hint">1 tick = one round in which every cell<br>may divide or die (1 s at 1× speed)</div>
         </div>
         <div id="toasts"></div>
       </section>
@@ -44,7 +45,7 @@
         <div id="hud">
           <div class="stat big"><span>Tumor cells</span><b id="sCells">1</b></div>
           <div class="stat big"><span>Mutation points</span><b id="sPoints">0</b></div>
-          <div class="stat"><span>Tick</span><b id="sTick">0</b></div>
+          <div class="stat" title="One tick is one step of the simulation: every tumor cell gets one chance to divide and one chance to die, then random mutations are rolled. At 1× speed one tick takes one second."><span>Tick (time step)</span><b id="sTick">0</b></div>
           <div class="stat"><span>Grid filled</span><b id="sFill">0%</b></div>
           <div class="stat" title="Product of the six growth hallmark multipliers"><span>Growth multiplier</span><b id="sGrowth">×1.00</b></div>
           <div class="stat" title="Chance each tumor cell dies per tick"><span>Death / tick</span><b id="sDeath">0%</b></div>

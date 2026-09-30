@@ -4,12 +4,12 @@
 
   // All tunables in one place.
   const CFG = {
-    gridX: 20, gridY: 12, gridZ: 20,
-    startPoints: 50,
-    costs: [10, 20, 35],        // cost to go 0→1, 1→2, 2→3
+    gridX: 40, gridY: 24, gridZ: 40,
+    startPoints: 100,
+    costs: [30, 90, 250],       // cost to go 0→1, 1→2, 2→3
     maxLevel: 3,
-    baseDivision: 0.16,         // per-tick division probability before multipliers
-    baseDeath: 0.02,            // per-tick death probability before apoptosis resistance
+    baseDivision: 0.10,         // per-tick division probability before multipliers
+    baseDeath: 0.0175,           // per-tick death probability before apoptosis resistance
     baseRange: 4,               // vessel supply range in grid cells
     nutrientMin: 0.1,
     seedMaxVesselDist: 1.5,     // the starting cell is placed within this distance of a vessel (0 = anywhere)
@@ -54,34 +54,45 @@
     function addVessel(i) {
       if (state[i] !== VESSEL) { state[i] = VESSEL; vesselCells.push(i); }
     }
-    // Walk along one axis, occasionally drifting by one cell on the other two.
-    function walk(pos, axis, length, wobble) {
+    // Walk along one axis (dir = +1 / -1) until the grid edge or `length` cells,
+    // occasionally drifting by one cell on the other two axes. Returns the path.
+    function walk(pos, axis, dir, length, wobble) {
       const dims = [X, Y, Z];
       const p = pos.slice();
-      for (let s = 0; s < length && p[axis] < dims[axis]; s++) {
+      const path = [];
+      for (let s = 0; s < length && p[axis] >= 0 && p[axis] < dims[axis]; s++) {
         addVessel(idx(p[0], p[1], p[2]));
+        path.push(p.slice());
         const next = p.slice();
-        next[axis]++;
+        next[axis] += dir;
         if (Math.random() < wobble) {
           const other = [0, 1, 2].filter((a) => a !== axis)[randInt(0, 1)];
           next[other] = clamp(next[other] + (Math.random() < 0.5 ? -1 : 1), 1, dims[other] - 2);
-          // fill the corner so the vessel stays connected
+          // fill the corner so the vessel stays face-connected
           const corner = p.slice();
           corner[other] = next[other];
           addVessel(idx(corner[0], corner[1], corner[2]));
         }
         p[0] = next[0]; p[1] = next[1]; p[2] = next[2];
       }
+      return path;
     }
+    // One connected tree: a trunk across the grid, two side branches, and a twig off each branch.
     function buildVessels() {
-      // 1: runs along X through the back half
-      walk([0, randInt(2, Y - 3), randInt(2, Math.floor(Z / 2) - 2)], 0, X, 0.2);
-      // 2: runs along Z through the far X half
-      walk([randInt(Math.floor(X / 2) + 1, X - 3), randInt(2, Y - 3), 0], 2, Z, 0.2);
-      // 3: vertical vessel in the remaining quadrant, with one side branch
-      const vx = randInt(2, Math.floor(X / 2) - 2), vz = randInt(Math.floor(Z / 2) + 1, Z - 3);
-      walk([vx, 0, vz], 1, Y, 0.15);
-      walk([vx + 1, randInt(3, Y - 4), vz], 0, randInt(4, 6), 0.3);
+      const frac = (n, lo, hi) => randInt(Math.floor(n * lo), Math.floor(n * hi));
+      const trunk = walk([0, frac(Y, 0.35, 0.65), frac(Z, 0.4, 0.6)], 0, 1, X, 0.2);
+      const branch = (from, axis, dir, length) => {
+        const start = from.slice();
+        start[axis] += dir;
+        return walk(start, axis, dir, length, 0.25);
+      };
+      const a = branch(trunk[frac(X, 0.2, 0.35)], 2, 1, Z);
+      const b = branch(trunk[frac(X, 0.65, 0.8)], 2, -1, Z);
+      [a, b].forEach((br) => {
+        const from = br[Math.floor(br.length * 0.6)];
+        if (!from) return;
+        branch(from, 1, from[1] < Y / 2 ? 1 : -1, Math.floor(Y * 0.6));
+      });
     }
     function computeVesselDistances() {
       const vc = vesselCells.map(coords);

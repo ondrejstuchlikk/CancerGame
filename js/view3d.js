@@ -101,7 +101,7 @@
       return m;
     };
 
-    meshNormal = mk(new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.4, depthWrite: false }), sim.N);
+    meshNormal = mk(new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.3, depthWrite: false }), sim.N);
     meshTumor = mk(new THREE.MeshLambertMaterial(), sim.N);
 
     const meshVessel = new THREE.InstancedMesh(
@@ -110,7 +110,7 @@
     meshVessel.frustumCulled = false;
     sim.vesselCells.forEach((c, k) => {
       const [x, y, z] = sim.coords(c);
-      dummy.position.set(x, y, z); dummy.scale.setScalar(0.8); dummy.updateMatrix();
+      dummy.position.set(x, y, z); dummy.scale.setScalar(1); dummy.updateMatrix(); // full size so vessels read as continuous tubes
       meshVessel.setMatrixAt(k, dummy.matrix);
     });
     group.add(meshVessel);
@@ -146,7 +146,7 @@
         meshTumor.setColorAt(nTumor, tumorColor(sim.nutrient[i]));
         nTumor++;
       } else {
-        dummy.scale.setScalar(0.16); dummy.updateMatrix();
+        dummy.scale.setScalar(0.12); dummy.updateMatrix();
         meshNormal.setMatrixAt(nNormal, dummy.matrix);
         const t = (sim.nutrient[i] - 0.1) / 0.9;
         meshNormal.setColorAt(nNormal, tmpColor.copy(NORMAL_LOW).lerp(NORMAL_HIGH, t));
