@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tumor Evolution (beta)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Tumor Evolution <span class="tag">beta</span></h1>
+      <div id="phase"></div>
+      <div class="controls">
+        <button id="btnPlay" class="primary">Begin growth</button>
+        <button id="btnStep" title="Advance a single tick">Next tick</button>
+        <label>Speed
+          <select id="speed">
+            <option value="1">1×</option>
+            <option value="2">2×</option>
+            <option value="5">5×</option>
+          </select>
+        </label>
+        <button id="btnEnd">End run</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="viewport">
+        <div id="canvas"></div>
+        <div id="banner" class="hidden"></div>
+        <div id="legend">
+          <div class="legend-row"><span class="swatch vessel"></span> Blood vessel</div>
+          <div class="legend-row"><span class="swatch normal"></span> Normal tissue</div>
+          <div class="legend-row">Tumor cell supply</div>
+          <div class="ramp"></div>
+          <div class="ramp-labels"><span>hypoxic</span><span>well supplied</span></div>
+          <div class="hint">Drag to rotate · scroll to zoom</div>
+        </div>
+        <div id="toasts"></div>
+      </section>
+
+      <aside id="side">
+        <div id="hud">
+          <div class="stat big"><span>Tumor cells</span><b id="sCells">1</b></div>
+          <div class="stat big"><span>Mutation points</span><b id="sPoints">0</b></div>
+          <div class="stat"><span>Tick</span><b id="sTick">0</b></div>
+          <div class="stat"><span>Grid filled</span><b id="sFill">0%</b></div>
+          <div class="stat" title="Product of the six growth hallmark multipliers"><span>Growth multiplier</span><b id="sGrowth">×1.00</b></div>
+          <div class="stat" title="Chance each tumor cell dies per tick"><span>Death / tick</span><b id="sDeath">0%</b></div>
+          <div class="stat" title="How far vessels supply nutrients, in grid cells"><span>Vessel range</span><b id="sRange">0</b></div>
+          <div class="stat" title="Share of tumor cells with poor nutrient supply"><span>Hypoxic cells</span><b id="sHypoxic">0%</b></div>
+          <div class="stat wide" title="Chance per gene per tick of a random ±1 level change"><span>Random mutation chance (per gene, per tick)</span><b id="sMut">1%</b></div>
+        </div>
+
+        <h2>Hallmarks</h2>
+        <div id="hallmarks"></div>
+
+        <h2>Event log</h2>
+        <div id="log"></div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="setup" class="overlay">
+    <div class="card">
+      <h1>Tumor Evolution <span class="tag">beta</span></h1>
+      <p class="lead">Start as a single rogue cell. Acquire the hallmarks of cancer, outgrow your
+        blood supply, and take over the tissue.</p>
+      <h3>Tissue</h3>
+      <div id="tissueChoices" class="choices"></div>
+      <h3>Cell type of origin</h3>
+      <div id="originChoices" class="choices"></div>
+      <button id="btnStart" class="primary wide">Continue — spend starting mutations</button>
+      <p class="fine">Educational prototype. Numbers are deliberately simplified and not biologically precise.</p>
+    </div>
+  </div>
+
+  <div id="end" class="overlay hidden">
+    <div class="card">
+      <h1 id="endTitle"></h1>
+      <p id="endText" class="lead"></p>
+      <div id="endStats" class="end-stats"></div>
+      <h3>Final gene levels</h3>
+      <div id="endGenes"></div>
+      <button id="btnAgain" class="primary wide">Play again</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/sim.js"></script>
+  <script src="js/view3d.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>
